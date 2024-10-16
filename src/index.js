@@ -1,12 +1,14 @@
 // src/index.js
 
 document.addEventListener("DOMContentLoaded", () => {
-
     const baseUrl = 'http://localhost:3000';
 
-    function loadFirstFilm() {
-
-        const url = `${baseUrl}/films/1`;
+    /**
+     * Fetches and displays the details of a specific film.
+     * @param {string} filmId - The ID of the film to load.
+     */
+    function loadFilmDetails(filmId) {
+        const url = `${baseUrl}/films/${filmId}`;
 
         fetch(url)
             .then(response => {
@@ -16,8 +18,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 return response.json();
             })
             .then(film => {
-
-                const availableTickets = film.capacity - film.tickets_sold;
+                // Calculate available tickets
+                let availableTickets = film.capacity - film.tickets_sold;
 
                 // Update Title
                 const titleElement = document.getElementById('title');
@@ -52,12 +54,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Update Buy Ticket Button
                 const buyTicketButton = document.getElementById('buy-ticket');
                 if (buyTicketButton) {
+                    // Reset button state
+                    buyTicketButton.classList.remove('disabled');
+                    buyTicketButton.textContent = 'Buy Ticket';
+
                     if (availableTickets <= 0) {
                         buyTicketButton.classList.add('disabled');
                         buyTicketButton.textContent = 'Sold Out';
                     } else {
-                        buyTicketButton.classList.remove('disabled');
-                        buyTicketButton.textContent = 'Buy Ticket';
+                        // Remove any existing event listeners to prevent multiple bindings
+                        const newBuyTicketButton = buyTicketButton.cloneNode(true);
+                        buyTicketButton.parentNode.replaceChild(newBuyTicketButton, buyTicketButton);
+
+                        // Add click event listener for buying a ticket
+                        newBuyTicketButton.addEventListener('click', () => {
+                            if (availableTickets > 0) {
+                                availableTickets -= 1;
+                                ticketNumElement.textContent = availableTickets;
+
+                                if (availableTickets === 0) {
+                                    newBuyTicketButton.classList.add('disabled');
+                                    newBuyTicketButton.textContent = 'Sold Out';
+                                }
+                            }
+                        });
                     }
                 }
 
@@ -67,12 +87,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     posterImg.src = film.poster;
                     posterImg.alt = film.title;
                 }
-
             })
             .catch(error => {
                 console.error('Error fetching film data:', error);
 
-                // Optionally, display an error message to the user
+                // Display an error message to the user
                 const showingElement = document.getElementById('showing');
                 if (showingElement) {
                     showingElement.innerHTML = `
@@ -82,8 +101,65 @@ document.addEventListener("DOMContentLoaded", () => {
                     `;
                 }
             });
-
     }
 
-    loadFirstFilm();
+    /**
+     * Fetches and populates the list of all films in the menu.
+     */
+    function loadFilmsList() {
+        const url = `${baseUrl}/films`;
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok (${response.status})`);
+                }
+                return response.json();
+            })
+            .then(films => {
+                const filmsList = document.getElementById('films');
+                if (!filmsList) {
+                    console.error('Element with id "films" not found.');
+                    return;
+                }
+
+                // Remove the placeholder <li> element if it exists
+                const placeholderLi = filmsList.querySelector('li');
+                if (placeholderLi) {
+                    filmsList.removeChild(placeholderLi);
+                }
+
+                // Iterate through the films array and create <li> elements
+                films.forEach(film => {
+                    const li = document.createElement('li');
+                    li.classList.add('film', 'item');
+                    li.textContent = film.title;
+                    // Set a data attribute with the film's ID for future use
+                    li.setAttribute('data-id', film.id);
+                    filmsList.appendChild(li);
+
+                    // Add click event listener to load film details when clicked
+                    li.addEventListener('click', () => {
+                        loadFilmDetails(film.id);
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching films list:', error);
+
+                // Optionally, display an error message to the user
+                const filmsList = document.getElementById('films');
+                if (filmsList) {
+                    filmsList.innerHTML = `
+                        <li class="ui red message">
+                            Failed to load films list. Please try again later.
+                        </li>
+                    `;
+                }
+            });
+    }
+
+    // Initialize the application by loading the first film and the films list
+    loadFilmDetails(1); // Load the first film initially
+    loadFilmsList();
 });
