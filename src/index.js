@@ -3,10 +3,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const baseUrl = 'http://localhost:3000';
 
-    /**
-     * Fetches and displays the details of a specific film.
-     * @param {string} filmId - The ID of the film to load.
-     */
+     //Fetches and displays the details of a specific film.
     function loadFilmDetails(filmId) {
         const url = `${baseUrl}/films/${filmId}`;
 
@@ -103,9 +100,8 @@ document.addEventListener("DOMContentLoaded", () => {
             });
     }
 
-    /**
-     * Fetches and populates the list of all films in the menu.
-     */
+     //Fetches and populates the list of all films in the menu.
+     
     function loadFilmsList() {
         const url = `${baseUrl}/films`;
 
@@ -147,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
             .catch(error => {
                 console.error('Error fetching films list:', error);
 
-                // Optionally, display an error message to the user
+                //display an error message to the user
                 const filmsList = document.getElementById('films');
                 if (filmsList) {
                     filmsList.innerHTML = `
@@ -160,6 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Initialize the application by loading the first film and the films list
-    loadFilmDetails(1); // Load the first film initially
+    loadFilmDetails(1);
     loadFilmsList();
 });
